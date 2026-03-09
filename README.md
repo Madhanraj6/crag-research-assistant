@@ -55,13 +55,3 @@ You can find full ASCII flowcharts of how each Python module works in the `docs/
    streamlit run app.py
    ```
 
-## ☁️ Deploy to Streamlit Cloud
-
-1. Push your code to GitHub (your `data/faiss_index` will be pushed so the app doesn't need to re-download papers).
-2. Go to [share.streamlit.io](https://share.streamlit.io) and click **New App**.
-3. Point it to this repository and select `app.py` as the main file path.
-4. **IMPORTANT**: Go to the app's **Advanced Settings -> Secrets** and add your API key:
-   ```toml
-   OPENROUTER_API_KEY = "your_key_here"
-   ```
-5. Click **Deploy!**
