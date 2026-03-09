@@ -4,7 +4,8 @@ The system prompt enforces strict source grounding: the model must cite sources 
 exact label (e.g. [KB: arXiv:2304.12345]) and must not attribute statements to the wrong source.
 """
 
-import osimport streamlit as st
+
+import streamlit as st
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage
 from config import settings
