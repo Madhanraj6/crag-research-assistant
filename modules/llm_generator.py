@@ -43,8 +43,8 @@ def _get_llm() -> ChatOpenAI:
     if _llm is None:
         _llm = ChatOpenAI(
             model="google/gemini-2.0-flash-001",
-            base_url="https://openrouter.ai/api/v1",
-            api_key=settings.OPENROUTER_API_KEY,
+            openai_api_base="https://openrouter.ai/api/v1",
+            openai_api_key=settings.OPENROUTER_API_KEY,
             temperature=0.2,
         )
     return _llm
