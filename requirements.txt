@@ -9,3 +9,4 @@ openai
 langchain-community
 langchain-openai
 langchain-huggingface
+xmltodict
