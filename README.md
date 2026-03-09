@@ -1,5 +1,6 @@
 # Agentic CRAG Research Assistant
 **Self-Correcting RAG System for arXiv Papers**
+
 **Corrective Agentic Retrieval-Augmented Generation (CRAG)**
 
 An AI-powered research assistant built with **Streamlit** and **LangGraph** that retrieves and aggregates academic papers to answer complex questions. The app uses a local **FAISS** vector database for the knowledge base, with a corrective loop that dynamically queries the live **arXiv API** if the local documents fail relevance checks. It includes conversation memory, stable source citation, and confidence scoring.
