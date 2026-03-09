@@ -4,6 +4,7 @@ The system prompt enforces strict source grounding: the model must cite sources 
 exact label (e.g. [KB: arXiv:2304.12345]) and must not attribute statements to the wrong source.
 """
 
+import osimport streamlit as st
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage
 from config import settings
@@ -41,10 +42,20 @@ SELF_SCORE: 0.85"""
 def _get_llm() -> ChatOpenAI:
     global _llm
     if _llm is None:
-       _llm = ChatOpenAI(
+        # 1. Try to get it from your existing config/environment
+        api_key = getattr(settings, "OPENROUTER_API_KEY", None) or os.getenv("OPENROUTER_API_KEY")
+        
+        # 2. If missing (like in Streamlit Cloud), grab it from st.secrets
+        if not api_key:
+            try:
+                api_key = st.secrets["OPENROUTER_API_KEY"]
+            except KeyError:
+                raise ValueError("OPENROUTER_API_KEY is missing! Please add it to Streamlit Secrets.")
+
+        _llm = ChatOpenAI(
             model="google/gemini-2.0-flash-001",
-            openai_api_base="https://openrouter.ai/api/v1",
-            openai_api_key=settings.OPENROUTER_API_KEY,
+            base_url="https://openrouter.ai/api/v1", # Changed from openai_api_base to the modern base_url
+            api_key=api_key,                         # Changed from openai_api_key to the modern api_key
             temperature=0.2,
         )
     return _llm
