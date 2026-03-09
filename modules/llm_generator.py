@@ -41,7 +41,7 @@ SELF_SCORE: 0.85"""
 def _get_llm() -> ChatOpenAI:
     global _llm
     if _llm is None:
-        _llm = ChatOpenAI(
+       _llm = ChatOpenAI(
             model="google/gemini-2.0-flash-001",
             openai_api_base="https://openrouter.ai/api/v1",
             openai_api_key=settings.OPENROUTER_API_KEY,
