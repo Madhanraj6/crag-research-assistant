@@ -1,6 +1,7 @@
 streamlit
 langchain
 langgraph
+langgraph-checkpoint-sqlite
 sentence-transformers
 faiss-cpu
 python-dotenv
@@ -10,3 +11,7 @@ langchain-community
 langchain-openai
 langchain-huggingface
 xmltodict
+# Evaluation harness (optional — only needed to run eval/)
+ragas
+deepeval
+datasets

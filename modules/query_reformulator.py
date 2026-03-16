@@ -7,6 +7,9 @@ import functools
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import PromptTemplate
 from config import settings
+from modules.logger import get_logger
+
+log = get_logger(__name__)
 
 _llm = None
 
@@ -63,7 +66,7 @@ def reformulate(query: str) -> str:
             reformulated = reformulated[1:-1]
         return reformulated
     except Exception as e:
-        print(f"[QueryReformulator] Error: {e}")
+        log.warning(f"Reformulation error: {e}")
         return query
 
 
@@ -77,7 +80,7 @@ def contextualize(query: str, chat_history: list) -> str:
 
     # Format history into a readable string
     history_lines = []
-    for msg in chat_history[-6:]:  # Only look at last 3 turns
+    for msg in chat_history[-12:]:  # Look at last 6 turns
         role = "User" if msg.type == "human" else "Assistant"
         content = msg.content
         if len(content) > 300:
@@ -96,5 +99,5 @@ def contextualize(query: str, chat_history: list) -> str:
             standalone = standalone[1:-1]
         return standalone
     except Exception as e:
-        print(f"[QueryReformulator] Contextualize Error: {e}")
+        log.warning(f"Contextualize error: {e}")
         return query

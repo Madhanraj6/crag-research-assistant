@@ -19,6 +19,7 @@ def embed_batch(texts: list[str]) -> list[list[float]]:
     return embeddings.embed_documents(texts)
 
 def get_dimension() -> int:
-    # Hardcode for all-MiniLM-L6-v2, as extracting from LangChain object is complex and we're dropping direct dimension checks anyway in new setup
+    # BGE-small-en-v1.5 and MiniLM-L6-v2 both output 384-dimensional vectors.
+    # If you switch to a model with a different dimension, update this value accordingly.
     return 384
 

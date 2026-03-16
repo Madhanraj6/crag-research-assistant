@@ -4,7 +4,7 @@ The system prompt enforces strict source grounding: the model must cite sources 
 exact label (e.g. [KB: arXiv:2304.12345]) and must not attribute statements to the wrong source.
 """
 
-
+import os
 import streamlit as st
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage
@@ -22,19 +22,28 @@ with the EXACT source label from the context, e.g. [KB: arXiv:2304.12345].
 You have access to the chat history. If the user asks a conversational question (e.g. "what did I ask before?"), answer it directly using the chat history without requiring context citations. Do not say you don't have enough info if the answer is in the chat history.
 
 ## Foundational Knowledge Rule
-If the user asks about a general AI/ML concept (e.g., "what is deep learning", "explain transformers", "how does attention work") OR asks you to explain/simplify a previous answer (e.g., "explain in simple terms"):
-- First, answer the question or explain the concept clearly using your general AI knowledge.
-- Explicitly state: "Based on general AI knowledge:"
-- Only then, reference how the retrieved papers build on or relate to that concept, if applicable.
+Only use general AI knowledge when ALL of these conditions are true:
+1. The question is definitional (e.g., "what IS X" — not "when was X published" or "who invented X")
+2. The retrieved context contains zero mention of the concept
+3. You are highly confident in the foundational fact
+
+When using general knowledge, ALWAYS prefix with: "Based on general AI knowledge:"
+NEVER use general knowledge to answer: publication dates, founding dates, factual history, or author attributions.
+In ALL other cases, stay strictly grounded in the provided context.
 
 ## Citation Rules
 - Do NOT invent citations or use a label for a different paper than what appears in context.
 - If the user refers to a source label (e.g. "explain WEB-1"), check the SOURCE MAP first.
 - A SOURCE MAP is injected into the prompt when available — always use it to resolve labels.
 
-## Format
-- Clear paragraphs, inline citations like [KB: arXiv:XXXX].
-- If context is completely off-topic, not foundational AI, and not about chat history, say you don't have enough info.
+## Output Format (mandatory for non-conversational answers)
+Structure every research answer as:
+**Summary:** 1-2 sentence direct answer.
+**From the papers:** Detailed explanation with [KB:] or [WEB:] citations.
+**Confidence:** high / medium / low — one-sentence justification.
+
+## Fallback
+If context is completely off-topic, not foundational AI, and not about chat history, say you don't have enough information.
 
 After your answer, on a new line:
 SELF_SCORE: 0.85"""
@@ -82,15 +91,28 @@ Remember to include SELF_SCORE at the end."""
 
 
 def stream_generate(query: str, context_text: str, chat_history: list = None, source_map: dict = None):
-    """Generator that streams the answer tokens."""
+    """Generator that streams the answer tokens. SELF_SCORE tokens are suppressed here
+    so they never appear in the UI; parse_score() extracts the score from the full buffer."""
     llm = _get_llm()
     messages = [SystemMessage(content=SYSTEM_PROMPT)]
     if chat_history:
         messages.extend(chat_history)
     messages.append(HumanMessage(content=_build_human_prompt(query, context_text, source_map)))
 
+    buffer = ""
     for chunk in llm.stream(messages):
-        yield chunk.content
+        content = chunk.content
+        if not content:
+            continue
+        buffer += content
+        # Once SELF_SCORE appears in the buffer, stop yielding to the UI
+        if "SELF_SCORE:" in buffer:
+            # Yield only the part before the SELF_SCORE token, then stop
+            pre_score = buffer.split("SELF_SCORE:")[0]
+            # We may have already yielded some of it; yield the remainder up to the cutoff
+            yield pre_score  # app.py accumulates full_response separately, so duplicate is harmless
+            return
+        yield content
 
 
 def parse_score(text: str) -> tuple[str, float]:

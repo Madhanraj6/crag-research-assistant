@@ -5,6 +5,9 @@ Web Search Fallback — queries the arXiv API for live research papers.
 import requests
 import xmltodict
 from typing import Optional
+from modules.logger import get_logger
+
+log = get_logger(__name__)
 
 
 ARXIV_API_URL = "http://export.arxiv.org/api/query"
@@ -21,8 +24,10 @@ def search_arxiv(query: str, max_results: int = 5) -> list[dict]:
     Returns:
         List of dicts with keys: title, abstract, authors, url, published
     """
+    # Restrict to AI/ML/NLP categories so off-topic papers don't pollute fallback context
+    category_filter = "(cat:cs.AI OR cat:cs.LG OR cat:cs.CL)"
     params = {
-        "search_query": f"all:{query}",
+        "search_query": f"{category_filter} AND all:{query}",
         "start": 0,
         "max_results": max_results,
         "sortBy": "relevance",
@@ -33,7 +38,7 @@ def search_arxiv(query: str, max_results: int = 5) -> list[dict]:
         response = requests.get(ARXIV_API_URL, params=params, timeout=10)
         response.raise_for_status()
     except requests.RequestException as e:
-        print(f"[WebSearch] arXiv API error: {e}")
+        log.warning(f"arXiv API error: {e}")
         return []
 
     try:
@@ -65,7 +70,7 @@ def search_arxiv(query: str, max_results: int = 5) -> list[dict]:
         return results
 
     except Exception as e:
-        print(f"[WebSearch] Parse error: {e}")
+        log.warning(f"Parse error: {e}")
         return []
 
 

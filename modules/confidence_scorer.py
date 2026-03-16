@@ -2,10 +2,13 @@
 Confidence Scoring Module — computes a composite confidence score for the response.
 
 Formula:
-    confidence = 0.5 * similarity_score
-              + 0.2 * retrieval_consistency
-              + 0.2 * llm_self_score
-              - 0.1 * correction_penalty
+    confidence = 0.5  * similarity_score
+              + 0.2  * retrieval_consistency
+              + 0.2  * llm_self_score
+              - 0.15 * correction_penalty_raw   (0-1 scale; 0.15/attempt + 0.2 if web fallback)
+
+The penalty uses a raw 0-1 value before the weight, so corrections produce a
+meaningful reduction instead of the original formula's ~0.05 max deduction.
 """
 
 
@@ -51,20 +54,18 @@ def compute(
     # --- LLM self-score (0-1) ---
     llm_component = min(1.0, max(0.0, llm_self_score))
 
-    # --- Correction penalty ---
-    # Each correction attempt reduces confidence by 0.1 (max penalty)
-    penalty = min(1.0, correction_attempts * 0.5)
-
-    # Additional penalty if web fallback was needed
+    # --- Correction penalty (raw 0-1 value, then weighted by 0.15) ---
+    # 0.15 per correction attempt + 0.20 if web fallback was needed
+    correction_penalty_raw = min(1.0, correction_attempts * 0.15)
     if used_web_fallback:
-        penalty = min(1.0, penalty + 0.3)
+        correction_penalty_raw = min(1.0, correction_penalty_raw + 0.20)
 
     # --- Composite score ---
     confidence = (
         0.5 * similarity_component
         + 0.2 * consistency
         + 0.2 * llm_component
-        - 0.1 * penalty
+        - 0.15 * correction_penalty_raw
     )
 
     # Clamp to [0, 1]
@@ -85,7 +86,7 @@ def compute(
             "similarity": round(similarity_component, 4),
             "consistency": round(consistency, 4),
             "llm_self_score": round(llm_component, 4),
-            "correction_penalty": round(penalty, 4),
+            "correction_penalty": round(correction_penalty_raw, 4),
             "web_fallback_used": used_web_fallback,
             "correction_attempts": correction_attempts,
         },

@@ -12,3 +12,14 @@ venv/
 # OS
 .DS_Store
 Thumbs.db
+
+# FAISS / Qdrant indexes
+data/faiss_index/
+qdrant_data/
+
+# SQLite persistent checkpointer (conversation memory across restarts)
+data/checkpoints.db
+
+# Eval output files (generated — not source)
+eval/ragas_results.json
+eval/deepeval_results.json

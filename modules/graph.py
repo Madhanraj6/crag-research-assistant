@@ -8,13 +8,23 @@ from typing_extensions import TypedDict
 from langchain_core.messages import BaseMessage, HumanMessage
 
 from langgraph.graph import StateGraph, START, END
-from langgraph.checkpoint.memory import MemorySaver
+try:
+    from langgraph.checkpoint.sqlite import SqliteSaver
+    _USE_SQLITE = True
+except ImportError:
+    from langgraph.checkpoint.memory import MemorySaver
+    _USE_SQLITE = False
+import sqlite3
+import os
 
 from modules import vector_store, relevance_evaluator
 from modules import query_reformulator, web_search, context_aggregator
 from config import settings
-
+from modules.reranker import rerank
+from modules.logger import get_logger
 import time
+
+log = get_logger(__name__)
 
 # --- STATE DEFINITION ---
 
@@ -59,7 +69,7 @@ def retrieve_node(state: AgentState) -> dict:
     try:
         results = store.similarity_search_with_score(query, k=settings.TOP_K)
     except Exception as e:
-        print(f"Error during retrieval: {e}")
+        log.warning(f"Retrieval error: {e}")
         results = []
 
     # Convert LangChain documents to the expected dict format for the evaluator.
@@ -76,6 +86,9 @@ def retrieve_node(state: AgentState) -> dict:
             "score": similarity,
             "metadata": doc.metadata
         })
+    
+    if len(formatted_docs) > 3:
+        formatted_docs = rerank(query, formatted_docs, top_n=3)
 
     step["status"] = "done"
     step["results_count"] = len(formatted_docs)
@@ -98,7 +111,7 @@ def grade_documents_node(state: AgentState) -> dict:
         "status": "done",
         "relevant": evaluation["relevant"],
         "avg_score": evaluation["avg_score"],
-        "reason": evaluation["reason"],
+        "reason": evaluation.get("reason", ""),
     }
 
     return {
@@ -194,7 +207,7 @@ def check_relevance(state: AgentState) -> Literal["aggregate", "reformulate", "w
 # --- BUILD GRAPH ---
 
 def build_graph() -> StateGraph:
-    """Constructs and compiles the LangGraph."""
+    """Constructs and compiles the LangGraph with a persistent SQLite checkpointer."""
     workflow = StateGraph(AgentState)
 
     # Add Nodes
@@ -222,10 +235,16 @@ def build_graph() -> StateGraph:
     workflow.add_edge("web_search", "aggregate")
     workflow.add_edge("aggregate", END)
 
-    # Compile with memory persistence
-    memory = MemorySaver()
-    app = workflow.compile(checkpointer=memory)
+    # Compile with persistent SQLite checkpointer (falls back to MemorySaver if
+    # langgraph-checkpoint-sqlite is not installed)
+    if _USE_SQLITE:
+        os.makedirs("data", exist_ok=True)
+        conn = sqlite3.connect("data/checkpoints.db", check_same_thread=False)
+        memory = SqliteSaver(conn)
+    else:
+        memory = MemorySaver()
 
+    app = workflow.compile(checkpointer=memory)
     return app
 
 

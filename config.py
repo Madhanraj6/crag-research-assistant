@@ -24,15 +24,15 @@ class Settings:
     OPENROUTER_API_KEY: str = get_secret("OPENROUTER_API_KEY", "")
 
     # --- Embeddings ---
-    EMBEDDING_MODEL: str = get_secret("EMBEDDING_MODEL", "all-MiniLM-L6-v2")
+    EMBEDDING_MODEL: str = get_secret("EMBEDDING_MODEL", "BAAI/bge-small-en-v1.5")
 
     # --- Vector Store (FAISS) ---
     FAISS_INDEX_PATH: str = get_secret("FAISS_INDEX_PATH", "data/faiss_index")
 
     # --- Retrieval ---
-    TOP_K: int = int(os.getenv("TOP_K", "5"))
+    TOP_K: int = int(os.getenv("TOP_K", "10"))
     RELEVANCE_THRESHOLD: float = float(os.getenv("RELEVANCE_THRESHOLD", "0.40"))
-    MAX_CORRECTION_ATTEMPTS: int = int(os.getenv("MAX_CORRECTION_ATTEMPTS", "1"))
+    MAX_CORRECTION_ATTEMPTS: int = int(os.getenv("MAX_CORRECTION_ATTEMPTS", "2"))
 
     # --- Server ---
     HOST: str = os.getenv("HOST", "0.0.0.0")

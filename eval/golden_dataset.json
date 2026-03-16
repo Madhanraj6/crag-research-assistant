@@ -1,0 +1,33 @@
+[
+  {
+    "_comment": "Template — replace with real paper IDs and verified ground-truth answers from your FAISS index.",
+    "question": "What is the core contribution of the 'Attention Is All You Need' paper?",
+    "ground_truth": "The paper introduced the Transformer architecture, which relies entirely on self-attention mechanisms rather than recurrence or convolution, enabling parallelizable sequence-to-sequence modeling.",
+    "relevant_paper_ids": ["1706.03762"],
+    "category": "architecture"
+  },
+  {
+    "question": "What problem does RLHF (Reinforcement Learning from Human Feedback) solve in language model training?",
+    "ground_truth": "RLHF aligns the outputs of a pre-trained language model with human preferences by training a reward model on human comparisons and using PPO to fine-tune the language model against it.",
+    "relevant_paper_ids": ["2203.02155"],
+    "category": "alignment"
+  },
+  {
+    "question": "What does LoRA stand for and what is its main advantage over full fine-tuning?",
+    "ground_truth": "LoRA stands for Low-Rank Adaptation. Its main advantage is that it freezes the pre-trained model weights and injects trainable low-rank decomposition matrices into each Transformer layer, drastically reducing trainable parameters and GPU memory requirements.",
+    "relevant_paper_ids": ["2106.09685"],
+    "category": "efficiency"
+  },
+  {
+    "question": "What is the difference between encoder-only and decoder-only transformer models?",
+    "ground_truth": "Encoder-only models (e.g., BERT) use bidirectional attention over the full input, making them suited for classification and understanding tasks. Decoder-only models (e.g., GPT) use causal (left-to-right) attention, making them suited for text generation.",
+    "relevant_paper_ids": ["1810.04805", "2005.14165"],
+    "category": "architecture"
+  },
+  {
+    "question": "How does RAG (Retrieval-Augmented Generation) differ from standard LLM prompting?",
+    "ground_truth": "RAG augments the LLM prompt with relevant documents retrieved from an external knowledge base at inference time, grounding the model's output in verifiable sources rather than relying solely on parametric knowledge baked in during training.",
+    "relevant_paper_ids": ["2005.11401"],
+    "category": "retrieval"
+  }
+]

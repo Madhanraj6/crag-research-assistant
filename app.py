@@ -241,7 +241,7 @@ with st.sidebar:
     </div>
     <div class="status-item">
         <span class="status-label">Embeddings</span>
-        <span class="status-value">MiniLM-L6</span>
+        <span class="status-value">BGE-small</span>
     </div>
     """, unsafe_allow_html=True)
 

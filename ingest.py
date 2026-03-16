@@ -76,21 +76,21 @@ def ingest(papers_per_category: int = 100) -> dict:
     Returns summary stats.
     """
     print("=" * 60)
-    print("  Corrective Agentic RAG — Data Ingestion (FAISS)")
+    print("  Corrective Agentic RAG - Data Ingestion (FAISS)")
     print("=" * 60)
 
     all_papers = []
 
     for cat_code, cat_name in CATEGORIES:
-        print(f"\n📥 Fetching {papers_per_category} papers from {cat_name} ({cat_code})...")
+        print(f"\n[Ingest] Fetching {papers_per_category} papers from {cat_name} ({cat_code})...")
         papers = fetch_arxiv_papers(cat_code, max_results=papers_per_category)
-        print(f"  ✓ Fetched {len(papers)} papers")
+        print(f"  - Fetched {len(papers)} papers")
         all_papers.extend(papers)
 
     if not all_papers:
         return {"status": "error", "message": "No papers fetched", "count": 0}
 
-    print(f"\n📊 Total papers fetched: {len(all_papers)}")
+    print(f"\n[Ingest] Total papers fetched: {len(all_papers)}")
 
     # Prepare texts and metadata
     texts = [
@@ -110,12 +110,12 @@ def ingest(papers_per_category: int = 100) -> dict:
     ]
 
     # Add to FAISS (embeddings generated inside add_documents)
-    print("\n🧠 Generating embeddings & upserting into FAISS...")
+    print("\n[Ingest] Generating embeddings & upserting into FAISS...")
     count = vector_store.add_documents(texts, metadatas)
-    print(f"  ✓ Upserted {count} documents")
+    print(f"  - Upserted {count} documents")
 
     total = vector_store.get_collection_count()
-    print(f"\n✅ Index now has {total} documents total")
+    print(f"\n[Ingest] Index now has {total} documents total")
     print("=" * 60)
 
     return {
@@ -128,4 +128,11 @@ def ingest(papers_per_category: int = 100) -> dict:
 
 
 if __name__ == "__main__":
-    ingest()
+    import sys
+    count = 100
+    if len(sys.argv) > 1:
+        try:
+            count = int(sys.argv[1])
+        except ValueError:
+            pass
+    ingest(papers_per_category=count)
