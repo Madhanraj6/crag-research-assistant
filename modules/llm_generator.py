@@ -37,16 +37,15 @@ In ALL other cases, stay strictly grounded in the provided context.
 - A SOURCE MAP is injected into the prompt when available — always use it to resolve labels.
 
 ## Output Format (mandatory for non-conversational answers)
-Structure every research answer as:
+Structure every research answer using these SECTION HEADERS (they are not citation labels):
 **Summary:** 1-2 sentence direct answer.
 **From the papers:** Detailed explanation with [KB:] or [WEB:] citations.
 **Confidence:** high / medium / low — one-sentence justification.
 
-## Fallback
-If context is completely off-topic, not foundational AI, and not about chat history, say you don't have enough information.
+Do NOT repeat any section. Write each section ONCE only. Stop after the Confidence line.
 
-After your answer, on a new line:
-SELF_SCORE: 0.85"""
+## Fallback
+If context is completely off-topic, not foundational AI, and not about chat history, say you don't have enough information."""
 
 
 def _get_llm() -> ChatOpenAI:
@@ -86,38 +85,21 @@ def _build_human_prompt(query: str, context_text: str, source_map: dict | None) 
 
 Question: {query}
 
-Provide a grounded answer. If the question is about our conversation history, answer it directly using the chat history provided. Otherwise, use the context sources above and cite each claim with its exact label.
-Remember to include SELF_SCORE at the end."""
+Provide a grounded answer using the Output Format specified in your instructions. Cite each factual claim with its exact source label. Do not repeat yourself. Write Summary, From the papers, and Confidence each exactly once, then stop."""
 
 
 def stream_generate(query: str, context_text: str, chat_history: list = None, source_map: dict = None):
-    """Generator that streams the answer tokens. SELF_SCORE tokens are suppressed here
-    so they never appear in the UI; parse_score() extracts the score from the full buffer."""
+    """Generator that streams the answer tokens directly. SELF_SCORE has been removed
+    from the prompt so no token suppression is needed; parse_score() defaults to 0.5."""
     llm = _get_llm()
     messages = [SystemMessage(content=SYSTEM_PROMPT)]
     if chat_history:
         messages.extend(chat_history)
     messages.append(HumanMessage(content=_build_human_prompt(query, context_text, source_map)))
 
-    buffer = ""
-    yielded_up_to = 0  # how many chars we've already sent to the caller
-
     for chunk in llm.stream(messages):
-        content = chunk.content
-        if not content:
-            continue
-        buffer += content
-
-        if "SELF_SCORE:" in buffer:
-            # Only emit the part before SELF_SCORE that hasn't been yielded yet
-            pre_score = buffer.split("SELF_SCORE:")[0]
-            remainder = pre_score[yielded_up_to:]
-            if remainder:
-                yield remainder
-            return
-
-        yield content
-        yielded_up_to += len(content)
+        if chunk.content:
+            yield chunk.content
 
 
 
