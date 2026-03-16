@@ -100,19 +100,25 @@ def stream_generate(query: str, context_text: str, chat_history: list = None, so
     messages.append(HumanMessage(content=_build_human_prompt(query, context_text, source_map)))
 
     buffer = ""
+    yielded_up_to = 0  # how many chars we've already sent to the caller
+
     for chunk in llm.stream(messages):
         content = chunk.content
         if not content:
             continue
         buffer += content
-        # Once SELF_SCORE appears in the buffer, stop yielding to the UI
+
         if "SELF_SCORE:" in buffer:
-            # Yield only the part before the SELF_SCORE token, then stop
+            # Only emit the part before SELF_SCORE that hasn't been yielded yet
             pre_score = buffer.split("SELF_SCORE:")[0]
-            # We may have already yielded some of it; yield the remainder up to the cutoff
-            yield pre_score  # app.py accumulates full_response separately, so duplicate is harmless
+            remainder = pre_score[yielded_up_to:]
+            if remainder:
+                yield remainder
             return
+
         yield content
+        yielded_up_to += len(content)
+
 
 
 def parse_score(text: str) -> tuple[str, float]:
