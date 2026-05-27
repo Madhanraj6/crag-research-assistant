@@ -5,6 +5,12 @@
 
 An AI-powered research assistant built with **Streamlit** and **LangGraph** that retrieves and aggregates academic papers to answer complex questions. The app uses a local **FAISS** vector database for the knowledge base, with a corrective loop that dynamically queries the live **arXiv API** if the local documents fail relevance checks. It includes conversation memory, stable source citation, and confidence scoring.
 
+<img width="1919" height="1079" alt="Screenshot 2026-05-27 194644" src="https://github.com/user-attachments/assets/6ce0dccc-92c2-4f0d-890a-5f072accacff" />
+
+<img width="800" height="439" alt="ScreenRecording2026-05-27194724-ezgif com-optimize" src="https://github.com/user-attachments/assets/d9b5979f-3bc1-4c3d-aa81-c14d0e60d6cc" />
+
+
+
 ## 🌟 Features
 - **Agentic Corrections (LangGraph):** Built-in loop to grade retrieved docs. If they fail (score < threshold or missing keywords), it uses an LLM to reformulate the query or falls back to live web search.
 - **Local FAISS Index:** Extremely fast local vector similarity search holding hundreds of arXiv papers.
